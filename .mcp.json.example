@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "team-docs-remote": {
+      "type": "http",
+      "url": "https://<function-url-host>/mcp",
+      "oauth": {
+        "clientId": "<ClientId output>",
+        "callbackPort": 8976,
+        "scopes": "https://<function-url-host>/mcp/search"
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+name: deploy
+
+# Tests every pull request. On main, deploys a new server version and moves the `live` alias to it,
+# then checks the server from outside: one deploy updates the server for every user.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: server-${{ github.event_name == 'push' && 'main' || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+
+      - name: Python tests
+        run: |
+          uv venv --quiet --python 3.13 .venv
+          uv pip install --quiet --python .venv/bin/python -r requirements-dev.txt
+          .venv/bin/ruff check .
+          .venv/bin/ruff format --check .
+          .venv/bin/python -m pytest -q
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Stack tests
+        working-directory: infra
+        run: |
+          npm ci
+          npx tsc
+          npx jest
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: "0.12.19"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Install CDK
+        working-directory: infra
+        run: npm ci
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.DEPLOY_ROLE_ARN }}
+          role-session-name: deploy-${{ github.run_id }}
+          aws-region: ap-southeast-2
+          mask-aws-account-id: true
+
+      # The full CDK output names the account, the server address and the client id, and run logs
+      # become public with the repo. Keep it in a file and print only the result.
+      - name: Deploy
+        working-directory: infra
+        env:
+          CDK_DISABLE_CLI_TELEMETRY: "true"
+        run: |
+          if ! npx cdk deploy --require-approval never --no-notices --outputs-file cdk-outputs.json > deploy.log 2>&1; then
+            sed -E 's/[0-9]{12}/<account>/g' deploy.log | grep -E '❌|Error|failed' | head -20
+            exit 1
+          fi
+          grep -E '✅|Deployment time|no changes' deploy.log | sed -E 's/[0-9]{12}/<account>/g'
+          echo "Deployed $(jq -r '."ai-remote-mcp".ServerVersion' cdk-outputs.json) at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Check the server from outside
+        run: python3 scripts/check_deploy.py "$(jq -r '."ai-remote-mcp".ServerUrl' infra/cdk-outputs.json)"

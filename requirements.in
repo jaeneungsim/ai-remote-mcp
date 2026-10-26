@@ -1,0 +1,2 @@
+# Runtime dependencies of the server bundle. boto3 comes with the Lambda Python runtime.
+mcp>=2.3,<2.4

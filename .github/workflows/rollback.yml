@@ -1,0 +1,50 @@
+name: rollback
+
+# Moves the `live` alias back to an earlier server version. The function URL points at the alias,
+# so the next request is answered by that version. The next deploy moves the alias forward again.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Lambda version number to serve (the deploy log of that commit, or the logs' lambda_version)
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: server-main
+  cancel-in-progress: false
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.ROLLBACK_ROLE_ARN }}
+          role-session-name: rollback-${{ github.run_id }}
+          aws-region: ap-southeast-2
+          mask-aws-account-id: true
+
+      - name: Move the live alias
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+$ ]]; then echo "version must be a number"; exit 1; fi
+          before=$(aws lambda get-alias --function-name ai-remote-mcp --name live --query FunctionVersion --output text)
+          aws lambda update-alias --function-name ai-remote-mcp --name live --function-version "$VERSION" > /dev/null
+          echo "live: version $before -> $VERSION at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Check the server from outside
+        run: |
+          url=$(aws ssm get-parameter --name /ai-remote-mcp/server-url --query Parameter.Value --output text)
+          echo "::add-mask::${url}"
+          python3 scripts/check_deploy.py "$url"

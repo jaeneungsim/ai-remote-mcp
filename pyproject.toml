@@ -1,0 +1,18 @@
+[project]
+name = "ai-remote-mcp"
+version = "0.1.0"
+description = "A remote MCP server for the ai-team-docs search: Cognito login, call logs, deploy and rollback on AWS Lambda."
+requires-python = ">=3.13"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+src = ["server", "tests", "scripts"]
+extend-exclude = ["infra"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["server", "tests", "scripts"]
+testpaths = ["tests"]

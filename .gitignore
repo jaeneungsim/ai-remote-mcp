@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+infra/node_modules/
+infra/cdk.out/
+infra/cdk.context.json
+infra/cdk-outputs.json
+# The real Claude Code config holds this deployment's address and client id; commit only the example.
+.mcp.json
+.DS_Store
