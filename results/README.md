@@ -4,7 +4,7 @@ All on 2026-10-26 (UTC), from a laptop in Sydney to `ap-southeast-2`, with Claud
 the MCP Python SDK 2.3.0 client in `scripts/measure.py`. One user, one machine: these numbers show
 how the pieces behave, not how a team would load them.
 
-## Sign-in with Claude Code (04:42-04:57)
+## Sign-in with Claude Code (04:42-05:50)
 
 - Claude Code signed in through Cognito's managed login with the pre-registered public client and
   callback port 8976, then called the tool. No `authServerMetadataUrl` was needed, although
@@ -16,6 +16,8 @@ how the pieces behave, not how a team would load them.
   well-known path.
 - Claude Code negotiated protocol `2026-07-28` and sent its client info (`claude-code/2.1.310`).
 - After Claude Code was closed and opened again, it did not ask to sign in again.
+- About an hour after sign-in, with the first access token expired, Claude Code called the tool again without
+  asking to sign in (05:50): it refreshed the token. Refresh token rotation is on.
 
 ## Response time (`latency.json`, 05:07)
 
