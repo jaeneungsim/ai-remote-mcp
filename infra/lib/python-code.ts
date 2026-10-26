@@ -62,14 +62,21 @@ export function serverCode(): lambda.Code {
   });
 }
 
-/** The git commit the server is built from, shown as the server version and in every log line. */
+/** What decides the deployed server. A commit that touches none of these (docs, results, scripts) keeps the version. */
+const DEPLOYED = ['server', 'infra', 'requirements.txt'];
+
+/**
+ * The last git commit that changed the deployed server, shown as the server version and in every
+ * log line. A docs-only commit therefore deploys no new Lambda version. CI needs the full history.
+ */
 export function gitVersion(): string {
   try {
-    const sha = execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] })
-      .toString().trim();
-    const dirty = execFileSync('git', ['status', '--porcelain', '--untracked-files=no'], { cwd: ROOT }).toString().trim();
-    return dirty ? `${sha}-dirty` : sha;
+    const git = (...args: string[]) =>
+      execFileSync('git', args, { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    const sha = git('log', '-1', '--format=%h', '--', ...DEPLOYED);
+    const dirty = git('status', '--porcelain', '--untracked-files=no', '--', ...DEPLOYED);
+    return sha ? (dirty ? `${sha}-dirty` : sha) : 'dev';
   } catch {
-    return 'dev'; // no commit yet
+    return 'dev'; // not a git checkout
   }
 }

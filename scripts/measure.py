@@ -154,13 +154,16 @@ def changes(path: Path, since: str) -> dict[str, Any]:
     def seconds(t: str | None) -> float | None:
         return round((datetime.fromisoformat(t.replace("Z", "+00:00")) - start).total_seconds(), 1) if t else None
 
-    old_after = [e for e in after[after.index(first) :] if e.get("version") == old]
+    # Old answers between the first new one and the settled streak: a version flip-flopping back.
+    end = next((i for i, e in enumerate(after) if e["t"] == stable_at), len(after) - 1)
+    settled = after[after.index(first) : end + 1]
+    old_after = [e for e in settled if e.get("version") == old]
     return {
         "old": old,
         "new": new,
         "first_new_after_s": seconds(first["t"]),
         "stable_after_s": seconds(stable_at),
-        "old_answers_after_first_new": len(old_after),
+        "old_answers_before_settled": len(old_after),
         "errors_after_start": sum(1 for e in after if "error" in e),
     }
 

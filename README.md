@@ -77,6 +77,9 @@ Check a deployed server from outside, without a token: `python3 scripts/check_de
 - `.github/workflows/rollback.yml`: run by hand with a Lambda version number. It moves the `live`
   alias with `ROLLBACK_ROLE_ARN`, which may only read and move the alias.
 - Both roles trust only the `main` branch of this repo, matched by GitHub's numeric owner and repo ids.
+- The server version is the last commit that changed `server/`, `infra/` or `requirements.txt`. A
+  commit that touches only docs, results or scripts keeps it, so its deploy changes nothing.
+- Measured times for a deploy, a rollback and the response time are in [results/](results/README.md).
 
 ## Logs
 

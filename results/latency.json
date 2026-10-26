@@ -1,0 +1,120 @@
+{
+  "at": "2026-10-26T05:07:18.854Z",
+  "remote_version": "c912093",
+  "remote": {
+    "calls": 10,
+    "median_ms": 170.5,
+    "max_ms": 201,
+    "errors": 0
+  },
+  "local": {
+    "calls": 10,
+    "median_ms": 143.5,
+    "max_ms": 159,
+    "errors": 0
+  },
+  "remote_calls": [
+    {
+      "q": 1,
+      "ms": 177,
+      "error": false
+    },
+    {
+      "q": 2,
+      "ms": 170,
+      "error": false
+    },
+    {
+      "q": 3,
+      "ms": 173,
+      "error": false
+    },
+    {
+      "q": 4,
+      "ms": 160,
+      "error": false
+    },
+    {
+      "q": 5,
+      "ms": 164,
+      "error": false
+    },
+    {
+      "q": 6,
+      "ms": 180,
+      "error": false
+    },
+    {
+      "q": 7,
+      "ms": 164,
+      "error": false
+    },
+    {
+      "q": 8,
+      "ms": 169,
+      "error": false
+    },
+    {
+      "q": 9,
+      "ms": 201,
+      "error": false
+    },
+    {
+      "q": 10,
+      "ms": 171,
+      "error": false
+    }
+  ],
+  "local_calls": [
+    {
+      "q": 1,
+      "ms": 137,
+      "error": false
+    },
+    {
+      "q": 2,
+      "ms": 136,
+      "error": false
+    },
+    {
+      "q": 3,
+      "ms": 147,
+      "error": false
+    },
+    {
+      "q": 4,
+      "ms": 144,
+      "error": false
+    },
+    {
+      "q": 5,
+      "ms": 139,
+      "error": false
+    },
+    {
+      "q": 6,
+      "ms": 143,
+      "error": false
+    },
+    {
+      "q": 7,
+      "ms": 141,
+      "error": false
+    },
+    {
+      "q": 8,
+      "ms": 147,
+      "error": false
+    },
+    {
+      "q": 9,
+      "ms": 149,
+      "error": false
+    },
+    {
+      "q": 10,
+      "ms": 159,
+      "error": false
+    }
+  ]
+}
